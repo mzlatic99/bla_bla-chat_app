@@ -36,7 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late int fileSize;
   late Uint8List? fileBytes;
   FirebaseStorage storage = FirebaseStorage.instance;
-  late final snackBar;
+  late SnackBar snackBar;
 
   void getCurrentUser() async {
     try {
