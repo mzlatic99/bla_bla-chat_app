@@ -1,6 +1,6 @@
 # blabla
 
-Flutter chat app
+Flutter global chat app
 
 Based on the Complete 2021 Flutter Development Bootcamp with Dart - Udemy Course
 
