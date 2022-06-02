@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:blabla/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
@@ -40,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void getCurrentUser() async {
     try {
-      final User? user = await _mAuth.currentUser;
+      final User? user = _mAuth.currentUser;
 
       if (user != null) {
         loggedInUser = user;
@@ -52,7 +50,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   uploadImageFile() async {
     FilePickerResult? result;
-    snackBar = SnackBar(
+    snackBar = const SnackBar(
       content: Text('Sending Attachment..'),
       duration: Duration(milliseconds: 2000),
       backgroundColor: kTitleTextColor,
@@ -95,7 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   uploadFile() async {
     FilePickerResult? result;
-    snackBar = SnackBar(
+    snackBar = const SnackBar(
       content: Text('Sending Attachment..'),
       duration: Duration(milliseconds: 2000),
       backgroundColor: kTitleTextColor,
@@ -112,9 +110,9 @@ class _ChatScreenState extends State<ChatScreen> {
         fileSize = result.files.first.size;
         fileType = result.files.first.extension!;
         await storageRef.child('files/$fileName').putData(fileBytes!);
-        var storedFile = await result.files.first.path;
+        var storedFile = result.files.first.path;
         // await storageRef.child('files/$fileName').getDownloadURL();
-        if (storedFile != 0)
+        if (storedFile != 0) {
           messages.add({
             'userId': loggedInUser.uid,
             'timestamp': FieldValue.serverTimestamp(),
@@ -124,8 +122,10 @@ class _ChatScreenState extends State<ChatScreen> {
             'size': fileSize,
             'type': fileType,
           });
-      } else
+        }
+      } else {
         return;
+      }
     } catch (e) {
       print(e);
     }
@@ -153,7 +153,7 @@ class _ChatScreenState extends State<ChatScreen> {
               _mAuth.signOut();
               Navigator.pushReplacementNamed(context, WelcomeScreen.id);
             },
-            icon: Icon(
+            icon: const Icon(
               FontAwesomeIcons.xmark,
               color: kTitleTextColor,
             ),
@@ -162,7 +162,7 @@ class _ChatScreenState extends State<ChatScreen> {
         title: Text(
           'Bla Bla',
           style: GoogleFonts.nunito(
-            textStyle: TextStyle(
+            textStyle: const TextStyle(
                 color: kTitleTextColor,
                 fontWeight: FontWeight.w800,
                 fontSize: 24),
@@ -176,7 +176,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           MessagesStream(),
           Container(
-            margin: EdgeInsets.fromLTRB(8, 8, 8, 8),
+            margin: const EdgeInsets.fromLTRB(8, 8, 8, 8),
             decoration: kMessageContainerDecoration,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -205,14 +205,14 @@ class _ChatScreenState extends State<ChatScreen> {
                 TextButton(
                     style: TextButton.styleFrom(
                       backgroundColor: kMainColor,
-                      shape: CircleBorder(),
+                      shape: const CircleBorder(),
                     ),
                     onPressed: () async {
                       showModalBottomSheet(
                           context: context,
                           builder: (context) {
                             return Padding(
-                              padding: EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(8.0),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceEvenly,
@@ -238,7 +238,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             );
                           });
                     },
-                    child: Icon(
+                    child: const Icon(
                       FontAwesomeIcons.plus,
                       color: Colors.white,
                     ))
@@ -264,7 +264,7 @@ class AttachmentButton extends StatelessWidget {
       child: TextButton(
         onPressed: onPressed,
         child: Padding(
-          padding: EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(8.0),
           child: Icon(
             icon,
             color: Colors.white,
@@ -273,7 +273,7 @@ class AttachmentButton extends StatelessWidget {
         ),
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all<Color>(color),
-          shape: MaterialStateProperty.all<CircleBorder>(CircleBorder()),
+          shape: MaterialStateProperty.all<CircleBorder>(const CircleBorder()),
         ),
       ),
     );
@@ -285,7 +285,7 @@ class MessagesStream extends StatelessWidget {
   bool _needsScroll = false;
   _scrollToEnd() async {
     _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-        duration: Duration(milliseconds: 200), curve: Curves.easeInOut);
+        duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
   }
 
   @override
@@ -296,7 +296,7 @@ class MessagesStream extends StatelessWidget {
       builder: (context, snapshot) {
         List<MessageBubble> messageWidgets = [];
         if (!snapshot.hasData) {
-          return Center(
+          return const Center(
             heightFactor: 5,
             child: CircularProgressIndicator(
               color: kLogoColor,
@@ -337,7 +337,7 @@ class MessagesStream extends StatelessWidget {
         return Expanded(
           child: ListView(
             controller: _scrollController,
-            padding: EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             children: messageWidgets,
           ),
         );
@@ -362,6 +362,7 @@ class MessageBubble extends StatelessWidget {
   final String type;
   final String? fileName;
   final int? fileSize;
+
   void openFile(file) {
     OpenFile.open('$file');
   }
@@ -369,7 +370,7 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 6.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Column(
         crossAxisAlignment:
             isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -378,23 +379,27 @@ class MessageBubble extends StatelessWidget {
           Material(
             color: isMe ? kMainColor : kTitleTextColor,
             borderRadius: BorderRadius.only(
-                topLeft: isMe ? Radius.circular(18.0) : Radius.circular(2.0),
-                bottomLeft: Radius.circular(18.0),
-                bottomRight:
-                    isMe ? Radius.circular(2.0) : Radius.circular(18.0),
-                topRight: Radius.circular(18.0)),
+                topLeft: isMe
+                    ? const Radius.circular(18.0)
+                    : const Radius.circular(2.0),
+                bottomLeft: const Radius.circular(18.0),
+                bottomRight: isMe
+                    ? const Radius.circular(2.0)
+                    : const Radius.circular(18.0),
+                topRight: const Radius.circular(18.0)),
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   isMe
-                      ? SizedBox.shrink()
+                      ? const SizedBox.shrink()
                       : Text(
                           isMe ? '' : sender,
                           style: GoogleFonts.nunito(
-                            textStyle: TextStyle(
+                            textStyle: const TextStyle(
                               fontSize: 10,
                               color: kLogoColor,
                               fontWeight: FontWeight.bold,
@@ -415,7 +420,7 @@ class MessageBubble extends StatelessWidget {
                             child: Text(
                               messageText,
                               style: GoogleFonts.nunito(
-                                textStyle: TextStyle(
+                                textStyle: const TextStyle(
                                   fontSize: 16,
                                   color: Colors.white,
                                 ),
@@ -441,8 +446,8 @@ class MessageBubble extends StatelessWidget {
                                 return Center(
                                   widthFactor: 3,
                                   child: Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(vertical: 8.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0),
                                     child: CircularProgressIndicator(
                                       color: isMe
                                           ? Colors.white
@@ -467,12 +472,12 @@ class MessageBubble extends StatelessWidget {
                           onPressed: () => openFile(messageText),
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 FontAwesomeIcons.solidFile,
                                 color: Colors.white,
                                 size: 30.0,
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 2.0,
                               ),
                               Column(
@@ -481,7 +486,7 @@ class MessageBubble extends StatelessWidget {
                                   Text(
                                     fileName!,
                                     style: GoogleFonts.nunito(
-                                      textStyle: TextStyle(
+                                      textStyle: const TextStyle(
                                         fontSize: 12,
                                         color: Colors.white,
                                       ),
@@ -490,7 +495,7 @@ class MessageBubble extends StatelessWidget {
                                   Text(
                                     '${(fileSize! / 1000).toStringAsFixed(2)} kB',
                                     style: GoogleFonts.nunito(
-                                      textStyle: TextStyle(
+                                      textStyle: const TextStyle(
                                         fontSize: 10,
                                         color: Colors.white60,
                                       ),
@@ -501,13 +506,13 @@ class MessageBubble extends StatelessWidget {
                             ],
                           ),
                         ),
-                      SizedBox(
+                      const SizedBox(
                         width: 6.0,
                       ),
                       Text(
-                        '$messageTime',
+                        messageTime,
                         style: GoogleFonts.nunito(
-                          textStyle: TextStyle(
+                          textStyle: const TextStyle(
                             fontSize: 10,
                             color: Colors.white60,
                           ),

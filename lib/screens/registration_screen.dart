@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_screen.dart';
 import 'package:loading_overlay/loading_overlay.dart';
-import 'package:file_picker/file_picker.dart';
 
 class RegistrationScreen extends StatefulWidget {
   static const String id = 'registration_screen';
