@@ -56,7 +56,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         'images/logo.png',
                         color: kLogoColor,
                       ),
-                      height: kHeroHight,
+                      height: kHeroHeight,
                       alignment: Alignment.bottomLeft,
                     ),
                   ),
