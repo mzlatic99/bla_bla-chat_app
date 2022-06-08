@@ -25,19 +25,19 @@ class _LoginScreenState extends State<LoginScreen> {
       body: LoadingOverlay(
         isLoading: _saving,
         opacity: 0.3,
-        progressIndicator: CircularProgressIndicator(),
+        progressIndicator: const CircularProgressIndicator(),
         color: kTitleTextColor,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
+          padding: kOverallPadding,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Flexible(
                 child: Hero(
-                  tag: 'logo',
-                  child: Container(
-                    height: 200.0,
+                  tag: kHeroTag,
+                  child: SizedBox(
+                    height: kHeroHeightInLogAndReg,
                     child: Image.asset(
                       'images/logo.png',
                       color: kLogoColor,
@@ -45,45 +45,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              SizedBox(
-                height: 48.0,
-              ),
+              kSpaceHeroAndInput,
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                padding: kTextFieldPadding,
                 child: TextField(
                   keyboardType: TextInputType.emailAddress,
                   onChanged: (value) {
                     email = value;
                   },
-                  decoration: kTextFieldDecoration.copyWith(
-                      hintText: 'Enter your email'),
+                  decoration:
+                      kTextFieldDecoration.copyWith(hintText: kEmailHintText),
                 ),
               ),
-              SizedBox(
-                height: 8.0,
-              ),
+              kSpaceBetweenTextFields,
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                padding: kTextFieldPadding,
                 child: TextField(
                   obscureText: true,
                   onChanged: (value) {
                     password = value;
                   },
                   decoration: kTextFieldDecoration.copyWith(
-                      hintText: 'Enter your password'),
+                      hintText: kPasswordHintText),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(18, 8, 18, 0),
-                child: Text(message,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.red,
-                    )),
+                padding: kTextMessagePadding,
+                child: Text(message, style: kTextMessageStyle),
               ),
-              SizedBox(
-                height: 24.0,
-              ),
+              kSpaceTextFieldButton,
               MainButton(
                   color: kLogInButtonColor,
                   onPressed: () async {

@@ -1,3 +1,4 @@
+import 'package:blabla/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,20 +11,19 @@ class MainButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: kMainButtonPadding,
       child: Material(
         elevation: 4.0,
         color: color,
         borderRadius: BorderRadius.circular(24.0),
         child: MaterialButton(
           onPressed: onPressed,
-          minWidth: 200.0,
-          height: 42.0,
+          minWidth: kMainButtonMinWidth,
+          height: kMainButtonHeight,
           child: Text(
             label,
             style: GoogleFonts.nunito(
-              textStyle:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+              textStyle: kMainButtonTextStyle,
             ),
           ),
         ),

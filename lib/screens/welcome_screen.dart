@@ -22,8 +22,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   void initState() {
     super.initState();
-    controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 1));
+    controller = AnimationController(vsync: this, duration: kAnimationDuration);
     controller.forward();
   }
 
@@ -38,67 +37,55 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     return Scaffold(
       backgroundColor: kScaffoldColor,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: kOverallPadding,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: kLogoPadding,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Hero(
-                    tag: 'logo',
+                    tag: kHeroTag,
                     child: Container(
-                      margin: EdgeInsets.only(bottom: 9.0),
+                      margin: kWelcomeScreenHeroMargin,
                       child: Image.asset(
                         'images/logo.png',
                         color: kLogoColor,
                       ),
-                      height: 70.0,
+                      height: kHeroHight,
                       alignment: Alignment.bottomLeft,
                     ),
                   ),
-                  SizedBox(
-                    width: 5.0,
-                  ),
-                  Container(
-                    child: AnimatedTextKit(
-                      animatedTexts: [
-                        WavyAnimatedText(
-                          'Bla Bla',
-                          textStyle: GoogleFonts.nunito(
-                            textStyle: TextStyle(
-                              color: kTitleTextColor,
-                              fontSize: 45.0,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ],
-                      isRepeatingAnimation: true,
-                    ),
+                  kLogoSpace,
+                  AnimatedTextKit(
+                    animatedTexts: [
+                      WavyAnimatedText(
+                        kTitleText,
+                        textStyle: GoogleFonts.nunito(textStyle: kTitleStyle),
+                      ),
+                    ],
+                    isRepeatingAnimation: true,
                   ),
                 ],
               ),
             ),
-            SizedBox(
-              height: 60.0,
-            ),
+            kSpaceHeroAndInput,
             MainButton(
-                color: Color(0xFF673AB7),
+                color: kMainColor,
                 onPressed: () {
                   Navigator.pushNamed(context, LoginScreen.id);
                 },
-                label: 'Log In'),
+                label: kLogInButtonLabel),
             MainButton(
                 color: kLogoColor,
                 onPressed: () {
                   Navigator.pushNamed(context, RegistrationScreen.id);
                 },
-                label: 'Register'),
+                label: kRegisterButtonLabel),
           ],
         ),
       ),
