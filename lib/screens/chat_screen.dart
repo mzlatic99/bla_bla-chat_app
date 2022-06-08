@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:blabla/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,11 +32,12 @@ class _ChatScreenState extends State<ChatScreen> {
   final messageTextController = TextEditingController();
   final ScrollController scrollController = ScrollController();
   CollectionReference messages = _firestore.collection('messages');
+  FirebaseStorage storage = FirebaseStorage.instance;
   late String fileType;
   late String fileName;
   late int fileSize;
   late Uint8List? fileBytes;
-  FirebaseStorage storage = FirebaseStorage.instance;
+
   late SnackBar snackBar;
 
   void getCurrentUser() async {
@@ -288,13 +290,11 @@ class MessagesStream extends StatelessWidget {
           _firestore.collection('messages').orderBy('timestamp').snapshots(),
       builder: (context, snapshot) {
         List<MessageBubble> messageWidgets = [];
-        if (!snapshot.hasData) {
-          return const Center(
-            heightFactor: 5,
-            child: CircularProgressIndicator(
-              color: kLogoColor,
-            ),
-          );
+        if (snapshot.hasError) {
+          return kErrorText;
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return kLoadingState;
         }
         final messages = snapshot.data!.docs;
         for (var message in messages) {
@@ -307,6 +307,7 @@ class MessagesStream extends StatelessWidget {
             final fileType = message.get('type');
             final fileName = message.get('name') ?? '';
             final fileSize = message.get('size') ?? 0;
+            final messageId = message.id;
             final currentUser = loggedInUser.email;
             final messageWidget = MessageBubble(
               sender: messageSender,
@@ -316,6 +317,7 @@ class MessagesStream extends StatelessWidget {
               isMe: currentUser == messageSender,
               fileName: fileName,
               fileSize: fileSize,
+              messageId: messageId,
             );
             messageWidgets.add(messageWidget);
           } catch (e) {
@@ -347,7 +349,8 @@ class MessageBubble extends StatelessWidget {
       required this.type,
       required this.isMe,
       this.fileName,
-      this.fileSize});
+      this.fileSize,
+      required this.messageId});
   final String sender;
   final String messageText;
   final String messageTime;
@@ -355,6 +358,13 @@ class MessageBubble extends StatelessWidget {
   final String type;
   final String? fileName;
   final int? fileSize;
+  final String messageId;
+
+  final CollectionReference messages = _firestore.collection('messages');
+
+  void deleteMessage() {
+    messages.doc(messageId).delete();
+  }
 
   void openFile(file) {
     OpenFile.open('$file');
@@ -369,119 +379,162 @@ class MessageBubble extends StatelessWidget {
             isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Material(
-            color: isMe ? kMainColor : kTitleTextColor,
-            borderRadius: BorderRadius.only(
-                topLeft: isMe
-                    ? const Radius.circular(18.0)
-                    : const Radius.circular(2.0),
-                bottomLeft: const Radius.circular(18.0),
-                bottomRight: isMe
-                    ? const Radius.circular(2.0)
-                    : const Radius.circular(18.0),
-                topRight: const Radius.circular(18.0)),
-            child: Padding(
-              padding: kMessagesPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  isMe
-                      ? const SizedBox.shrink()
-                      : Text(
-                          isMe ? '' : sender,
-                          style: GoogleFonts.nunito(
-                            textStyle: kSenderTextStyle,
-                          ),
-                        ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (type == 'txt')
-                        Flexible(
-                          child: Container(
-                            constraints: BoxConstraints(
-                                maxWidth:
-                                    MediaQuery.of(context).size.width / 1.5),
-                            child: Text(
-                              messageText,
-                              style: GoogleFonts.nunito(
-                                textStyle: kMessageTextStyle,
+          Dismissible(
+            key: Key(messageId),
+            confirmDismiss: (DismissDirection direction) async {
+              return await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return isMe
+                        ? AlertDialog(
+                            title: kAlertDeleteTitle,
+                            content: kAlertDeleteContent,
+                            actions: <Widget>[
+                              TextButton(
+                                  onPressed: () {
+                                    deleteMessage();
+                                    Navigator.of(context).pop(true);
+                                  },
+                                  child: kDeleteConfirmationText),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: kCancelConfirmationText,
                               ),
-                            ),
-                          ),
-                        )
-                      else if (type == 'jpg' || type == 'png' || type == 'gif')
-                        Flexible(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18.0),
-                            child: Image(
-                              width: MediaQuery.of(context).size.width / 2,
-                              image: NetworkImage(
-                                messageText,
-                              ),
-                              loadingBuilder: (BuildContext context,
-                                  Widget child,
-                                  ImageChunkEvent? loadingProgress) {
-                                if (loadingProgress == null) {
-                                  return child;
-                                }
-                                return Center(
-                                  widthFactor: 3,
-                                  child: CircularProgressIndicator(
-                                    color:
-                                        isMe ? Colors.white : kLogInButtonColor,
-                                    value: loadingProgress.expectedTotalBytes !=
-                                            null
-                                        ? loadingProgress
-                                                .cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                        : null,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        )
-                      else
-                        TextButton(
-                          onPressed: () => openFile(messageText),
-                          child: Row(
-                            children: [
-                              kFileIcon,
-                              kFileTextSpace,
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    fileName!,
-                                    style: GoogleFonts.nunito(
-                                      textStyle: kFileMessageTextStyle,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${(fileSize! / 1000).toStringAsFixed(2)} kB',
-                                    style: GoogleFonts.nunito(
-                                      textStyle: kFileMessageSizeStyle,
-                                    ),
-                                  )
-                                ],
-                              )
                             ],
+                          )
+                        : AlertDialog(
+                            title: kTitleCancelText,
+                            content: kContentCancelText,
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
+                                child: kCancelConfirmationText,
+                              ),
+                            ],
+                          );
+                  });
+            },
+            child: Material(
+              color: isMe ? kMainColor : kTitleTextColor,
+              borderRadius: BorderRadius.only(
+                  topLeft: isMe
+                      ? const Radius.circular(18.0)
+                      : const Radius.circular(2.0),
+                  bottomLeft: const Radius.circular(18.0),
+                  bottomRight: isMe
+                      ? const Radius.circular(2.0)
+                      : const Radius.circular(18.0),
+                  topRight: const Radius.circular(18.0)),
+              child: Padding(
+                padding: kMessagesPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    isMe
+                        ? const SizedBox.shrink()
+                        : Text(
+                            isMe ? '' : sender,
+                            style: GoogleFonts.nunito(
+                              textStyle: kSenderTextStyle,
+                            ),
+                          ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (type == 'txt')
+                          Flexible(
+                            child: Container(
+                              constraints: BoxConstraints(
+                                  maxWidth:
+                                      MediaQuery.of(context).size.width / 1.5),
+                              child: Text(
+                                messageText,
+                                style: GoogleFonts.nunito(
+                                  textStyle: kMessageTextStyle,
+                                ),
+                              ),
+                            ),
+                          )
+                        else if (type == 'jpg' ||
+                            type == 'png' ||
+                            type == 'gif')
+                          Flexible(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(18.0),
+                              child: Image(
+                                width: MediaQuery.of(context).size.width / 2,
+                                image: NetworkImage(
+                                  messageText,
+                                ),
+                                loadingBuilder: (BuildContext context,
+                                    Widget child,
+                                    ImageChunkEvent? loadingProgress) {
+                                  if (loadingProgress == null) {
+                                    return child;
+                                  }
+                                  return Center(
+                                    widthFactor: 3,
+                                    child: CircularProgressIndicator(
+                                      color: isMe
+                                          ? Colors.white
+                                          : kLogInButtonColor,
+                                      value:
+                                          loadingProgress.expectedTotalBytes !=
+                                                  null
+                                              ? loadingProgress
+                                                      .cumulativeBytesLoaded /
+                                                  loadingProgress
+                                                      .expectedTotalBytes!
+                                              : null,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          )
+                        else
+                          TextButton(
+                            onPressed: () => openFile(messageText),
+                            child: Row(
+                              children: [
+                                kFileIcon,
+                                kFileTextSpace,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      fileName!,
+                                      style: GoogleFonts.nunito(
+                                        textStyle: kFileMessageTextStyle,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${(fileSize! / 1000).toStringAsFixed(2)} kB',
+                                      style: GoogleFonts.nunito(
+                                        textStyle: kFileMessageSizeStyle,
+                                      ),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ),
+                        kMessageSpaceTime,
+                        Text(
+                          messageTime,
+                          style: GoogleFonts.nunito(
+                            textStyle: kMessageTextTimeStyle,
                           ),
                         ),
-                      kMessageSpaceTime,
-                      Text(
-                        messageTime,
-                        style: GoogleFonts.nunito(
-                          textStyle: kMessageTextTimeStyle,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

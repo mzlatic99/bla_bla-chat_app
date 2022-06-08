@@ -155,6 +155,20 @@ const kMessageTextTimeStyle = TextStyle(
   fontSize: 10,
   color: Colors.white60,
 );
+const kLoadingState = Center(
+  heightFactor: 5,
+  child: CircularProgressIndicator(
+    color: kLogoColor,
+  ),
+);
+const kErrorText = Text('Something went wrong');
+const kAlertDeleteTitle = Text("Delete Confirmation");
+const kAlertDeleteContent =
+    Text("Are you sure you want to delete this message?");
+const kDeleteConfirmationText = Text("Delete");
+const kCancelConfirmationText = Text("Cancel");
+const kContentCancelText = Text('Cannot delete sender\'s messages');
+const kTitleCancelText = Text('Error');
 
 //Main Button
 const kMainButtonMinWidth = 200.0;
